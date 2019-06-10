@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>表</title>
+    <link rel="stylesheet" href="./css/todoList.css">
+    <style>
+        header{
+            height: 80px;
+            width: 1200px;
+            position: relative;
+            right: 0;
+            left: 0;
+            margin: auto;
+            border-bottom: 1px solid #666666;
+        }
+        header p{
+            position: absolute;
+
+            right: 0;
+            left: 0;
+            margin: auto;
+            text-align: center;
+        }
+        .tab{
+            width: 600px;
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+            align-items: center;
+            height: 20px;
+            position: absolute;
+            top: 100px;
+            right: 0;
+            left: 0;
+            margin: auto;
+        }
+        .tab li{
+            width: 200px;
+            font-size: 20px;
+            height: 20px;
+            padding: 10px;
+        }
+        .hot{
+            color: #FFFFFF;
+            transition: all 1s;
+        }
+        li.hot:nth-child(1)~ .top1{
+            transform: translate(0,0);
+        }
+        li.hot:nth-child(2)~ .top1{
+            transform: translate(100%,0);
+        }
+        li.hot:nth-child(3)~ .top1{
+            transform: translate(200%,0);
+        }
+        .top1{
+            width: 200px;
+            height: 30px;
+            position: absolute;
+            border-radius: 10px;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: #34aadc;
+            transition: all ease-in 0.5s;
+        }
+        .content{
+            width: 600px;
+            flex-direction: column;
+            height: auto;
+            position: absolute;
+            top: 130px;
+            right: 0;
+            left: 0;
+            margin: auto;
+        }
+        .content li{
+            padding: 10px;
+        }
+        .content p{
+            display: inline-block;
+        }
+        .content time{
+            float: right;
+        }
+        .content del{
+            margin-left: 20px;
+            float: right;
+            text-decoration: none;
+        }
+        .content del:hover{
+            cursor: pointer;
+        }
+
+        form{
+            position: relative;
+            top: 30px;
+            right: 0;
+            left: 0;
+            margin: auto;
+            text-align: center;
+        }
+
+        .input_text{
+            width: 400px;
+            height: 36px;
+            padding: 0 0 0 10px;
+            outline: none;
+        }
+        .submit_button{
+            height: 40px;
+            width: 80px;
+            background: transparent;
+            border: 1px solid #666666;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <p>ToDoList</p>
+    <form action="" name="myform">
+        <input name="content" value = "" class="input_text" type="text" placeholder="请输入待办事项" required>
+        <input name = "" class="submit_button" type="submit" value = "提交">
+    </form>
+</header>
+<main>
+    <ul class="tab">
+        <li type ="all" class = "hot">全部任务</li>
+        <li type = "left">未完成</li>
+        <li type = "done">已完成</li>
+        <div class = "top1"></div>
+    </ul>
+    <ul class="content">
+
+    </ul>
+
+</main>
+<script>
+    window.addEventListener('load',function () {
+    let title = document.querySelectorAll('.tab>li');
+    let contents = document.querySelector('.content');
+
+    let prev =0;
+    let todolist =[
+        {
+            id:1, content:'放假好好睡一觉',ctime:'2019.06.08',status:false
+        },
+        {
+            id:2, content:'放假好好睡两觉',ctime:'2019.06.09',status:false
+        },
+        {
+            id:3, content:'不睡觉',ctime:'2019.06.07',status:true
+        },
+        {
+            id:4, content:'学习',ctime:'2019.06.06',status:true
+        }
+
+    ];
+
+    let str = localStorage.getItem('todolist');
+    if(!str){
+        saveData();
+        str = localStorage.getItem('todolist');
+    }
+    todolist = JSON.parse(str);
+
+    title.forEach((ele,index) => {
+        ele.onclick = function () {
+            title[prev].classList.remove('hot');
+            this.classList.add('hot');
+            prev = index;
+            type = this.getAttribute('type');
+
+            render(filterdata(type));
+        }
+    });
+
+
+    title[0].onclick();
+
+
+
+    function  filterdata(type){
+        let arr = [];
+        switch(type){
+            case 'all':
+                arr = todolist;
+                break;
+            case 'done':
+                arr = todolist.filter(function (ele) {return ele.status});
+                break;
+            case 'left':
+                arr = todolist.filter(function (ele) {return !ele.status});
+                break;
+        }
+
+        return arr;
+    }
+    
+    let forms = document.forms[0];
+    let input_content = forms.elements['content'];
+    let input_submit = forms.elements[1];
+
+    input_submit.onclick = function(e){
+        e.preventDefault();
+        let obj = createObj();
+        todolist.push(obj);
+        forms.reset();
+        render(filterdata(type));
+        saveData();
+    };
+
+    function saveData() {
+        localStorage.setItem('todolist',JSON.stringify(todolist))
+    }
+
+
+
+
+    function createObj(){
+        let id = todolist[todolist.length-1].id+1;
+        let content = input_content.value;
+        let ctime = new Date().toLocaleDateString();
+        let status = false;
+        return {id,content,ctime,status};
+    }
+
+    contents.onclick = function(e){
+        let target = e.target;
+        let arr = todolist;
+        let id = target.parentNode.id;
+        if (target.nodeName === "INPUT") {
+            let a = arr.filter(ele=>ele.id == id)[0];
+            a.status=target.checked;
+        } else if (target.nodeName === "DEL") {
+            let index = arr.findIndex(ele => ele.id == id);
+            arr.splice(index, 1);
+        }
+        saveData();
+        render(filterdata(type));
+     };
+
+        function render(arr) {
+            let html = '';
+            arr.forEach(function (elem) {
+                if(elem.status){
+                    html +=`
+                        <li id = ${elem.id}>
+                            <input type="checkbox" checked> <p>${elem.content}</p> <del>X</del> <time>${elem.ctime}</time>
+                        </li>
+                    `;
+                }else{
+                    html +=`
+                    <li id = ${elem.id}>
+                        <input type="checkbox" > <p>${elem.content}</p> <del>X</del> <time>${elem.ctime}</time>
+                    </li>
+                    `;
+                }
+            });
+
+            contents.innerHTML = html;
+        }
+    })
+</script>
+</body>
+</html>
